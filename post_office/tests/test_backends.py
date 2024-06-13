@@ -4,12 +4,16 @@ from unittest import mock
 
 from django.conf import settings
 from django.core.files.images import File
-from django.core.mail import EmailMultiAlternatives, send_mail, EmailMessage
+from django.core.mail import EmailMessage
+from django.core.mail import EmailMultiAlternatives
+from django.core.mail import send_mail
 from django.core.mail.backends.base import BaseEmailBackend
 from django.test import TestCase
 from django.test.utils import override_settings
 
-from ..models import Email, STATUS, PRIORITY
+from ..models import PRIORITY
+from ..models import STATUS
+from ..models import Email
 from ..settings import get_backend
 
 
@@ -50,19 +54,19 @@ class BackendTest(TestCase):
         self.assertEqual(get_backend(), 'django.core.mail.backends.smtp.EmailBackend')
 
         # If EMAIL_BACKEND is set to PostOfficeBackend, use SMTP to send by default
-        setattr(settings, 'EMAIL_BACKEND', 'post_office.EmailBackend')
+        settings.EMAIL_BACKEND = 'post_office.EmailBackend'
         self.assertEqual(get_backend(), 'django.core.mail.backends.smtp.EmailBackend')
 
         # If EMAIL_BACKEND is set on new dictionary-styled settings, use that
-        setattr(settings, 'POST_OFFICE', {'EMAIL_BACKEND': 'test'})
+        settings.POST_OFFICE = {'EMAIL_BACKEND': 'test'}
         self.assertEqual(get_backend(), 'test')
         delattr(settings, 'POST_OFFICE')
 
         if old_email_backend:
-            setattr(settings, 'EMAIL_BACKEND', old_email_backend)
+            settings.EMAIL_BACKEND = old_email_backend
         else:
             delattr(settings, 'EMAIL_BACKEND')
-        setattr(settings, 'POST_OFFICE', previous_settings)
+        settings.POST_OFFICE = previous_settings
 
     @override_settings(EMAIL_BACKEND='post_office.EmailBackend')
     def test_sending_html_email(self):
